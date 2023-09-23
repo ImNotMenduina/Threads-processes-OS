@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
-#define MATRIX_LINE 32
-#define MATRIX_COLUMN 32
 
 struct threadPackage
 {
@@ -11,6 +9,7 @@ struct threadPackage
     int lineInterval;
     int threadsTotal;
     int begin;
+    int columnLength;
 };
 typedef struct threadPackage THREAD_PACK;
 
@@ -20,8 +19,11 @@ int** ma;
 int** mb;
 int** mc;
 
-int main()
+int main(int agrc, char* argv[])
 {
+    const int MATRIX_LINE = atoi(argv[1]);
+    const int MATRIX_COLUMN = MATRIX_LINE;
+
     ma = (int**)malloc(sizeof(int*) * MATRIX_LINE);
     mb = (int**)malloc(sizeof(int*) * MATRIX_LINE); 
     mc = (int**)malloc(sizeof(int*) * MATRIX_LINE);  
@@ -40,7 +42,7 @@ int main()
     {
         for(int j=0; j<MATRIX_COLUMN; j++)
         {
-            ma[i][j] = 21;
+            ma[i][j] = rand() % 10;
         }
     }
     //B
@@ -48,7 +50,7 @@ int main()
     {
         for(int j=0; j<MATRIX_COLUMN; j++)
         {
-            mb[i][j] = 4;
+            mb[i][j] = rand() % 10;
         }
     }
     //C
@@ -69,9 +71,10 @@ int main()
     {
         THREAD_PACK* threadInf = (THREAD_PACK*)malloc(sizeof(THREAD_PACK*));
         threadInf->threadId = i;
-        threadInf->lineInterval = interval;
         threadInf->threadsTotal = n;
+        threadInf->lineInterval = interval;
         threadInf->begin = interval * i;
+        threadInf->columnLength = MATRIX_COLUMN;
         pthread_create(&id[i], NULL, &matrix_prod, (void*)threadInf);
     }
 
@@ -91,12 +94,13 @@ void* matrix_prod(void* threadInf)
 
         for(int i=0; i<thread->lineInterval; i++)
         {
-            for(int j=0; j<MATRIX_COLUMN; j++)
+            for(int j=0; j<thread->columnLength; j++)
             {
-                for(int k=0; k<MATRIX_COLUMN; k++)
+                for(int k=0; k<thread->columnLength; k++)
                 {
                     mc[thread->begin +i][j] += ma[thread->begin + i][k] * mb[k][j];
                 }
             }
         }
+    free(thread);
 }
